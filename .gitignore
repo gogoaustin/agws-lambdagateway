@@ -20,3 +20,5 @@ spec/
 # Pipeline
 runway/FS_ROOT/opt
 .project
+
+.settings

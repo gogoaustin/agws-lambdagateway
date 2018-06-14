@@ -2,6 +2,7 @@ package payment
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -51,9 +52,40 @@ func createChargeHandler(c echo.Context) error {
 
 	val, err := client.Invoke(req)
 	if err != nil {
-		log.Printf("Error creating charge with error: %+v", err)
+		log.Printf("Error invoking lambda with error: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to create charge", err)
 	}
 
-	return c.JSONBlob(201, val.Payload)
+	payload := val.Payload
+
+	if val.FunctionError == aws.String("Handled") {
+		var errResp struct {
+			ErrorMessage struct {
+				Code    string `json:"code"`
+				Status  int    `json:"status"`
+				Message string `json:"message"`
+				Param   string `json:"param"`
+				Type    string `json:"type"`
+			} `json:"errorMessage"`
+			ErrorType string `json:"errorType"`
+		}
+
+		err := json.Unmarshal(payload, &errResp)
+		if err != nil {
+			fmt.Printf("json error: %+v", err)
+			return echo.NewHTTPError(http.StatusInternalServerError)
+		}
+
+		log.Printf("Error creating charge: %+v", payload)
+		if status := errResp.ErrorMessage.Status; status != 0 {
+			return c.JSONBlob(status, payload)
+		}
+
+		return c.JSONBlob(500, payload)
+	} else if val.FunctionError == aws.String("Unhandled") {
+		log.Printf("Unhandled error creating charge: %+v", payload)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	return c.JSONBlob(201, payload)
 }

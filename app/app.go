@@ -5,11 +5,16 @@ import (
 
 	"git.gogoair.com/bagws/lambdagateway/app/payment"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 )
 
 // NewApp creates and returns a new router
 func NewApp() *echo.Echo {
 	e := echo.New()
+	e.Use(middleware.RequestID())
+	e.Use(middleware.BodyLimit("1M"))
+	e.Use(middleware.Recover())
+	e.Use(middleware.Logger())
 	e.GET("/healthcheck", healthHandler)
 
 	// Register payment routes
