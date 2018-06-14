@@ -1,0 +1,12 @@
+{
+  "base": "base_fedora",
+  "notifications": {
+    "slack": "#gws-dev"
+  },
+  "deployment": "spinnaker",
+  "env": ["dev"],
+  "services": {
+    "lambda": ["createchargegwsapis"]
+  },
+  "owner_email": "gwsdev@gogoair.com"
+}

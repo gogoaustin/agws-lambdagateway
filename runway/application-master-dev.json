@@ -1,0 +1,26 @@
+{
+  "app": {
+    "instance_type": "t2.micro",
+    "app_description": "GWS demos gateway service"
+  },
+  "regions": ["us-east-1"],
+  "asg": {
+    "subnet_purpose": "internal",
+    "min_inst": 1,
+    "max_inst": 1
+  },
+  "elb": {
+    "subnet_purpose": "internal",
+    "target": "HTTP:3000/healthcheck",
+    "ports": [
+      {
+        "instance": "HTTP:3000",
+        "loadbalancer": "HTTP:80"
+      }
+    ]
+  },
+  "security_group": {
+    "elb_extras": ["enabled_access_apps_all"],
+    "instance_extras": ["enabled_access_apps_all"]
+  }
+}

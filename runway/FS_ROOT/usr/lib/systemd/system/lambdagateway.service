@@ -1,0 +1,16 @@
+[Unit]
+Description=Lambda GateService
+Requires=gogo-bootstrap.service
+After=gogo-bootstrap.service
+
+[Service]
+ExecStart=/opt/lambdagateway/lambdagateway
+WorkingDirectory=/opt/lambdagateway
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+Environment=GO_ENV=production 
+EnvironmentFile=/etc/gogo/cloud.env
+
+[Install]
+WantedBy=multi-user.target
