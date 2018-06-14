@@ -6,7 +6,7 @@
   "deployment": "spinnaker",
   "env": ["stage"],
   "services": {
-    "lambda": ["createchargegwsapis"]
+    "lambda": ["paymentdemobagws"]
   },
   "owner_email": "gwsdev@gogoair.com"
 }

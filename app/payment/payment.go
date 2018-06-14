@@ -42,7 +42,7 @@ func createChargeHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Bad request")
 	}
 
-	url := envy.Get("CREATE_CHARGE_LAMBDA", "createchargebagws")
+	url := envy.Get("PAYMENT_DEMO_LAMBDA", "paymentdemobagws")
 	body, _ := json.Marshal(token)
 	req := &lambda.InvokeInput{
 		FunctionName: &url,
