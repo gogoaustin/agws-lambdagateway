@@ -4,7 +4,7 @@
     "slack": "#gws-dev"
   },
   "deployment": "spinnaker",
-  "env": ["dev"],
+  "env": ["stage"],
   "services": {
     "lambda": ["createchargegwsapis"]
   },
