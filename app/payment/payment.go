@@ -56,10 +56,10 @@ func createChargeHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to create charge", err)
 	}
 
-	log.Printf("response: %t", val.FunctionError == aws.String("Unhandled"))
 	payload := val.Payload
 
-	if val.FunctionError == aws.String("Handled") || val.FunctionError == aws.String("Unhandled") {
+	fnErr := *val.FunctionError
+	if fnErr == "Handled" || fnErr == "Unhandled" {
 		var errResp struct {
 			ErrorMessage struct {
 				Code    string `json:"code"`
