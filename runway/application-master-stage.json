@@ -1,7 +1,7 @@
 {
   "app": {
     "instance_type": "t2.micro",
-    "app_description": "GWS demos gateway service"
+    "app_description": "GWS demos gateway service "
   },
   "regions": ["us-east-1"],
   "asg": {
