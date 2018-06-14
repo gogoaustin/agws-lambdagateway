@@ -11,10 +11,10 @@
   },
   "elb": {
     "subnet_purpose": "internal",
-    "target": "HTTP:3000/healthcheck",
+    "target": "HTTP:8000/healthcheck",
     "ports": [
       {
-        "instance": "HTTP:3000",
+        "instance": "HTTP:8000",
         "loadbalancer": "HTTP:80"
       }
     ]
