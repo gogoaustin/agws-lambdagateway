@@ -59,32 +59,28 @@ func createChargeHandler(c echo.Context) error {
 	payload := val.Payload
 
 	if val.FunctionError != nil {
-		fnErr := *val.FunctionError
-		if fnErr == "Handled" || fnErr == "Unhandled" {
-			var errResp struct {
-				ErrorMessage struct {
-					Code    string `json:"code"`
-					Status  int    `json:"status"`
-					Message string `json:"message"`
-					Param   string `json:"param"`
-					Type    string `json:"type"`
-				} `json:"errorMessage"`
-				ErrorType string `json:"errorType"`
-			}
+		log.Printf("error: %+v", payload)
 
-			err := json.Unmarshal(payload, &errResp)
-			if err != nil {
-				fmt.Printf("json error: %+v", err)
-				return echo.NewHTTPError(http.StatusInternalServerError)
-			}
-
-			log.Printf("Error creating charge: %+v", payload)
-			if status := errResp.ErrorMessage.Status; status != 0 {
-				return c.JSONBlob(status, payload)
-			}
-
-			return c.JSONBlob(500, payload)
+		var errResp struct {
+			ErrorMessage struct {
+				Status  int    `json:"status"`
+				Message string `json:"message"`
+			} `json:"errorMessage"`
+			ErrorType string `json:"errorType"`
 		}
+
+		err := json.Unmarshal(payload, &errResp)
+		if err != nil {
+			fmt.Printf("json error: %+v", err)
+			return echo.NewHTTPError(http.StatusInternalServerError)
+		}
+
+		log.Printf("Error creating charge: %+v", payload)
+		if status := errResp.ErrorMessage.Status; status != 0 {
+			return c.JSONBlob(status, payload)
+		}
+
+		return c.JSONBlob(500, payload)
 	}
 
 	return c.JSONBlob(201, payload)
