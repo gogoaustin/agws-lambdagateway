@@ -9,10 +9,12 @@ export PATH=$PATH:$GOPATH/bin
 echo "Downloading dep"
 curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 
+mkdir -p runway/FS_ROOT/opt
+cp -R repo/runway/. runway/
+cp repo/build.gradle .
 mkdir -p $GOPATH/src/git.gogoair.com/bagws/lambdagateway
 cp -r repo/* $GOPATH/src/git.gogoair.com/bagws/lambdagateway/
 cp repo/.env $GOPATH/src/git.gogoair.com/bagws/lambdagateway/
-cp repo/build.gradle /tmp/workspace/a_bagws_lambdagateway/
 cd $GOPATH/src/git.gogoair.com/bagws/lambdagateway
 dep ensure
 
