@@ -56,6 +56,7 @@ func createChargeHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to create charge", err)
 	}
 
+	log.Printf("response: %+v", val)
 	payload := val.Payload
 
 	if val.FunctionError == aws.String("Handled") {
