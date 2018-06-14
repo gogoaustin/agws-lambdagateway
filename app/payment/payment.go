@@ -56,10 +56,10 @@ func createChargeHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to create charge", err)
 	}
 
-	log.Printf("response: %+v", val)
+	log.Printf("response: %t", val.FunctionError == aws.String("Unhandled"))
 	payload := val.Payload
 
-	if val.FunctionError == aws.String("Handled") {
+	if val.FunctionError == aws.String("Handled") || val.FunctionError == aws.String("Unhandled") {
 		var errResp struct {
 			ErrorMessage struct {
 				Code    string `json:"code"`
@@ -83,9 +83,6 @@ func createChargeHandler(c echo.Context) error {
 		}
 
 		return c.JSONBlob(500, payload)
-	} else if val.FunctionError == aws.String("Unhandled") {
-		log.Printf("Unhandled error creating charge: %+v", payload)
-		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
 	return c.JSONBlob(201, payload)
