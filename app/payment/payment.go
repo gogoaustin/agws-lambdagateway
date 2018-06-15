@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -25,26 +26,28 @@ func init() {
 		log.Printf("Unable to create session: %+v", err)
 	}
 
-	// Config Lambda lives in us-east-1
 	client = lambda.New(sess, aws.NewConfig().WithRegion("us-east-1"))
 }
 
 // Register creates an Echo group for payment
 func Register(e *echo.Echo) {
+	log.Println("Registering payment group")
 	g := e.Group("/payment")
 	g.POST("/charge", createChargeHandler)
 }
 
 func createChargeHandler(c echo.Context) error {
+	c.Logger().Infof("pre: %d", time.Now().Unix())
 	if client == nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error")
 	}
 
 	token := &tokenRequest{}
 	if err := c.Bind(token); err != nil {
-		log.Printf("json error: %+v", err)
+		c.Logger().Errorf("json error: %+v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "Bad request")
 	}
+	c.Logger().Infof("after bind: %d", time.Now().Unix())
 
 	url := envy.Get("PAYMENT_DEMO_LAMBDA", "paymentdemobagws")
 	body, _ := json.Marshal(token)
@@ -53,12 +56,14 @@ func createChargeHandler(c echo.Context) error {
 		FunctionName: &url,
 		Payload:      body,
 	}
+	c.Logger().Infof("before invoke: %d", time.Now().Unix())
 
 	val, err := client.Invoke(req)
 	if err != nil {
-		log.Printf("Error invoking lambda with error: %+v", err)
+		c.Logger().Errorf("Error invoking lambda with error: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to create charge", err)
 	}
+	c.Logger().Infof("after invoke: %d", time.Now().Unix())
 
 	payload := val.Payload
 
@@ -70,7 +75,7 @@ func createChargeHandler(c echo.Context) error {
 
 		err := json.Unmarshal(payload, &errResp)
 		if err != nil {
-			log.Printf("json error: %+v", err)
+			c.Logger().Errorf("json error: %+v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
@@ -80,11 +85,11 @@ func createChargeHandler(c echo.Context) error {
 		}
 		err = json.Unmarshal([]byte(errResp.ErrorMessage), &errMsg)
 		if err != nil {
-			log.Printf("json error: %+v", err)
+			c.Logger().Errorf("json error: %+v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
-		log.Printf("Error creating charge: %+v", string(payload))
+		c.Logger().Infof("Error creating charge: %+v", string(payload))
 		if status := errMsg.Status; status >= 400 {
 			return c.JSONBlob(status, payload)
 		}
