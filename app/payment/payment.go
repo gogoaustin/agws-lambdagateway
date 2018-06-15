@@ -30,7 +30,6 @@ func init() {
 
 // Register creates an Echo group for payment
 func Register(e *echo.Echo) {
-	log.Println("Registering payment group")
 	g := e.Group("/payment")
 	g.POST("/charge", createChargeHandler)
 }
@@ -42,13 +41,13 @@ func createChargeHandler(c echo.Context) error {
 
 	token := &tokenRequest{}
 	if err := c.Bind(token); err != nil {
-		log.Printf("json error: %+v", err)
+		c.Logger().Errorf("json error: %+v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "Bad request")
 	}
 
 	url := envy.Get("PAYMENT_DEMO_LAMBDA", "paymentdemobagws")
 	body, _ := json.Marshal(token)
-	log.Printf("token: %+v", token)
+	c.Logger().Debugf("token: %+v", token)
 	req := &lambda.InvokeInput{
 		FunctionName: &url,
 		Payload:      body,
@@ -56,7 +55,7 @@ func createChargeHandler(c echo.Context) error {
 
 	val, err := client.Invoke(req)
 	if err != nil {
-		log.Printf("Error invoking lambda with error: %+v", err)
+		c.Logger().Errorf("Error invoking lambda with error: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to create charge", err)
 	}
 
@@ -70,7 +69,7 @@ func createChargeHandler(c echo.Context) error {
 
 		err := json.Unmarshal(payload, &errResp)
 		if err != nil {
-			log.Printf("json error: %+v", err)
+			c.Logger().Errorf("json error: %+v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
@@ -80,11 +79,11 @@ func createChargeHandler(c echo.Context) error {
 		}
 		err = json.Unmarshal([]byte(errResp.ErrorMessage), &errMsg)
 		if err != nil {
-			log.Printf("json error: %+v", err)
+			c.Logger().Errorf("json error: %+v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
-		log.Printf("Error creating charge: %+v", string(payload))
+		c.Logger().Infof("Error creating charge: %+v", string(payload))
 		if status := errMsg.Status; status >= 400 {
 			return c.JSONBlob(status, payload)
 		}
