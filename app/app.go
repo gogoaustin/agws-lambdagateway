@@ -13,6 +13,7 @@ func NewApp() *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.RequestID())
 	e.Use(middleware.BodyLimit("1M"))
+	e.Use(middleware.CORS())
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
 	e.GET("/healthcheck", healthHandler)
