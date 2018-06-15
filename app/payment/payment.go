@@ -2,7 +2,6 @@ package payment
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -15,6 +14,10 @@ import (
 )
 
 var client *lambda.Lambda
+
+type tokenRequest struct {
+	StripeToken *stripe.Token `json:"stripeToken"`
+}
 
 func init() {
 	sess, err := session.NewSession()
@@ -37,7 +40,7 @@ func createChargeHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error")
 	}
 
-	token := &stripe.Token{}
+	token := &tokenRequest{}
 	if err := c.Bind(token); err != nil {
 		log.Printf("json error: %+v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "Bad request")
@@ -45,6 +48,7 @@ func createChargeHandler(c echo.Context) error {
 
 	url := envy.Get("PAYMENT_DEMO_LAMBDA", "paymentdemobagws")
 	body, _ := json.Marshal(token)
+	c.Logger().Infof("token: %+v", token)
 	req := &lambda.InvokeInput{
 		FunctionName: &url,
 		Payload:      body,
@@ -66,7 +70,7 @@ func createChargeHandler(c echo.Context) error {
 
 		err := json.Unmarshal(payload, &errResp)
 		if err != nil {
-			fmt.Printf("json error: %+v", err)
+			log.Printf("json error: %+v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
@@ -76,7 +80,7 @@ func createChargeHandler(c echo.Context) error {
 		}
 		err = json.Unmarshal([]byte(errResp.ErrorMessage), &errMsg)
 		if err != nil {
-			fmt.Printf("json error: %+v", err)
+			log.Printf("json error: %+v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
