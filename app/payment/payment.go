@@ -80,7 +80,7 @@ func createChargeHandler(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
-		log.Printf("Error creating charge: %+v", payload)
+		log.Printf("Error creating charge: %+v", string(payload))
 		if status := errMsg.Status; status >= 400 {
 			return c.JSONBlob(status, payload)
 		}
