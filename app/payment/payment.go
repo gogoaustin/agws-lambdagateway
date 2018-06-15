@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -37,7 +36,6 @@ func Register(e *echo.Echo) {
 }
 
 func createChargeHandler(c echo.Context) error {
-	log.Printf("pre: %d", time.Now().Unix())
 	if client == nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error")
 	}
@@ -47,7 +45,6 @@ func createChargeHandler(c echo.Context) error {
 		log.Printf("json error: %+v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "Bad request")
 	}
-	log.Printf("after bind: %d", time.Now().Unix())
 
 	url := envy.Get("PAYMENT_DEMO_LAMBDA", "paymentdemobagws")
 	body, _ := json.Marshal(token)
@@ -56,14 +53,12 @@ func createChargeHandler(c echo.Context) error {
 		FunctionName: &url,
 		Payload:      body,
 	}
-	log.Printf("before invoke: %d", time.Now().Unix())
 
 	val, err := client.Invoke(req)
 	if err != nil {
 		log.Printf("Error invoking lambda with error: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to create charge", err)
 	}
-	log.Printf("after invoke: %d", time.Now().Unix())
 
 	payload := val.Payload
 
