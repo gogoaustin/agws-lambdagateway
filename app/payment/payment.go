@@ -37,33 +37,33 @@ func Register(e *echo.Echo) {
 }
 
 func createChargeHandler(c echo.Context) error {
-	c.Logger().Infof("pre: %d", time.Now().Unix())
+	log.Printf("pre: %d", time.Now().Unix())
 	if client == nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error")
 	}
 
 	token := &tokenRequest{}
 	if err := c.Bind(token); err != nil {
-		c.Logger().Errorf("json error: %+v", err)
+		log.Printf("json error: %+v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "Bad request")
 	}
-	c.Logger().Infof("after bind: %d", time.Now().Unix())
+	log.Printf("after bind: %d", time.Now().Unix())
 
 	url := envy.Get("PAYMENT_DEMO_LAMBDA", "paymentdemobagws")
 	body, _ := json.Marshal(token)
-	c.Logger().Infof("token: %+v", token)
+	log.Printf("token: %+v", token)
 	req := &lambda.InvokeInput{
 		FunctionName: &url,
 		Payload:      body,
 	}
-	c.Logger().Infof("before invoke: %d", time.Now().Unix())
+	log.Printf("before invoke: %d", time.Now().Unix())
 
 	val, err := client.Invoke(req)
 	if err != nil {
-		c.Logger().Errorf("Error invoking lambda with error: %+v", err)
+		log.Printf("Error invoking lambda with error: %+v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to create charge", err)
 	}
-	c.Logger().Infof("after invoke: %d", time.Now().Unix())
+	log.Printf("after invoke: %d", time.Now().Unix())
 
 	payload := val.Payload
 
@@ -75,7 +75,7 @@ func createChargeHandler(c echo.Context) error {
 
 		err := json.Unmarshal(payload, &errResp)
 		if err != nil {
-			c.Logger().Errorf("json error: %+v", err)
+			log.Printf("json error: %+v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
@@ -85,11 +85,11 @@ func createChargeHandler(c echo.Context) error {
 		}
 		err = json.Unmarshal([]byte(errResp.ErrorMessage), &errMsg)
 		if err != nil {
-			c.Logger().Errorf("json error: %+v", err)
+			log.Printf("json error: %+v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
-		c.Logger().Infof("Error creating charge: %+v", string(payload))
+		log.Printf("Error creating charge: %+v", string(payload))
 		if status := errMsg.Status; status >= 400 {
 			return c.JSONBlob(status, payload)
 		}
