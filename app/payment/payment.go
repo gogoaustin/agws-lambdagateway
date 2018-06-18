@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -39,10 +40,16 @@ func createChargeHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error")
 	}
 
+	redirect := c.QueryParam("redirect")
 	token := &tokenRequest{}
-	if err := c.Bind(token); err != nil {
-		c.Logger().Errorf("json error: %+v", err)
-		return echo.NewHTTPError(http.StatusBadRequest, "Bad request")
+	if redirect != "" {
+		id := c.FormValue("stripeToken")
+		token.StripeToken.ID = id
+	} else {
+		if err := c.Bind(token); err != nil {
+			c.Logger().Errorf("json error: %+v", err)
+			return echo.NewHTTPError(http.StatusBadRequest, "Bad request")
+		}
 	}
 
 	url := envy.Get("PAYMENT_DEMO_LAMBDA", "paymentdemobagws")
@@ -56,6 +63,9 @@ func createChargeHandler(c echo.Context) error {
 	val, err := client.Invoke(req)
 	if err != nil {
 		c.Logger().Errorf("Error invoking lambda with error: %+v", err)
+		if redirect != "" {
+			return c.Redirect(302, redirect+"?error=internal&status=500")
+		}
 		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to create charge", err)
 	}
 
@@ -70,6 +80,9 @@ func createChargeHandler(c echo.Context) error {
 		err := json.Unmarshal(payload, &errResp)
 		if err != nil {
 			c.Logger().Errorf("json error: %+v", err)
+			if redirect != "" {
+				return c.Redirect(302, redirect+"?error=internal&status=500")
+			}
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
@@ -80,16 +93,28 @@ func createChargeHandler(c echo.Context) error {
 		err = json.Unmarshal([]byte(errResp.ErrorMessage), &errMsg)
 		if err != nil {
 			c.Logger().Errorf("json error: %+v", err)
+			if redirect != "" {
+				return c.Redirect(302, redirect+"?error=internal&status=500")
+			}
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
 		c.Logger().Infof("Error creating charge: %+v", string(payload))
 		if status := errMsg.Status; status >= 400 {
+			if redirect != "" {
+				return c.Redirect(302, redirect+"?error="+errMsg.Message+"&status="+strconv.Itoa(status))
+			}
 			return c.JSONBlob(status, payload)
 		}
 
+		if redirect != "" {
+			return c.Redirect(302, redirect+"?error="+errMsg.Message+"&status=500")
+		}
 		return c.JSONBlob(500, payload)
 	}
 
+	if redirect != "" {
+		return c.Redirect(302, redirect)
+	}
 	return c.JSONBlob(201, payload)
 }
