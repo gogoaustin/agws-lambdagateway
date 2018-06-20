@@ -44,7 +44,8 @@ func createChargeHandler(c echo.Context) error {
 	token := &tokenRequest{}
 	if redirect != "" {
 		id := c.FormValue("stripeToken")
-		token.StripeToken.ID = id
+		stripeToken := &stripe.Token{ID: id}
+		token.StripeToken = stripeToken
 	} else {
 		if err := c.Bind(token); err != nil {
 			c.Logger().Errorf("json error: %+v", err)
