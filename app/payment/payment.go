@@ -41,6 +41,7 @@ func createChargeHandler(c echo.Context) error {
 	}
 
 	redirect := c.QueryParam("redirect")
+	service := c.QueryParam("service")
 	token := &tokenRequest{}
 	if redirect != "" {
 		id := c.FormValue("stripeToken")
@@ -115,7 +116,7 @@ func createChargeHandler(c echo.Context) error {
 	}
 
 	if redirect != "" {
-		return c.Redirect(302, redirect)
+		return c.Redirect(302, redirect+"?service="+service)
 	}
 	return c.JSONBlob(201, payload)
 }
