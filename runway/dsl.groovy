@@ -35,6 +35,9 @@ def myJob = job("$SRC_JOB") {
     numToKeep(-1)
     artifactNumToKeep(-1)
   }
+  wrappers {
+    preBuildCleanup()
+  }
   scm {
     git {
       remote {
