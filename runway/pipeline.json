@@ -4,7 +4,7 @@
     "slack": "#gws-dev"
   },
   "deployment": "spinnaker",
-  "env": ["stage"],
+  "env": ["eng-dash-stage"],
   "services": {
     "lambda": ["paymentdemobagws"]
   },

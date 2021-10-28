@@ -1,0 +1,16 @@
+name: run-jenkins
+on: 
+  push:
+    paths:
+      - 'runway/**'
+    branches: 
+      - master
+jobs:
+  push-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: make shell file  executable by user
+        run: chmod +x pipeline-action.sh
+      - name: Run bash script action
+        run: ./pipeline-action.sh ${{ github.event.repository.name  }}

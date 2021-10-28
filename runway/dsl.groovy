@@ -41,8 +41,7 @@ def myJob = job("$SRC_JOB") {
   scm {
     git {
       remote {
-        url("$REPO")
-        credentials('gitlab-jenkinsci')
+        url("git@git.gogoair.com:bagws/lambdagateway.git")
       }
       extensions {
         wipeOutWorkspace()
